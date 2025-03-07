@@ -1,0 +1,2 @@
+/home/ec2-user/text-recognition/src/main/java/com/aws/rekognition/App.java
+/home/ec2-user/text-recognition/src/main/java/com/aws/rekognition/SqsMessagePrinter.java
