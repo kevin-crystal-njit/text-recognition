@@ -14,6 +14,10 @@ import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
 import software.amazon.awssdk.services.rekognition.model.Image;
 import software.amazon.awssdk.services.rekognition.model.TextDetection;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.rekognition.RekognitionClient;
+import software.amazon.awssdk.services.rekognition.model.DetectTextRequest;
+import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
+import software.amazon.awssdk.services.rekognition.model.Image;
 
 public class SqsMessagePrinter {
     public static void main(String[] args) {
@@ -39,7 +43,7 @@ public class SqsMessagePrinter {
                 .build();
 
         try {
-            // Infinite loop to keep polling for messages
+            // Infinite loop to keep polling for messages till -1 encountered
             while (true) {
                 ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
                         .queueUrl(queueUrl)
@@ -56,17 +60,40 @@ public class SqsMessagePrinter {
 
                     // Check if this is the end-of-stream indicator
                     if ("-1".equals(messageBody)) {
+                        // Ensure the -1 message is also deleted
+                        sqsClient.deleteMessage(DeleteMessageRequest.builder()
+                                .queueUrl(queueUrl)
+                                .receiptHandle(message.receiptHandle())
+                                .build());
+                                
                         System.out.println("Received end-of-stream marker. Stopping.");
                         return; // Exit the main method, ending the program
                     }
 
                     // Use the message body as the S3 key to get the object
                     try {
-                        s3Client.getObject(GetObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(messageBody)
-                            .build());
-                        System.out.println("Fetched S3 object with key: " + messageBody);
+                        // s3Client.getObject(GetObjectRequest.builder()
+                        //     .bucket(bucketName)
+                        //     .key(messageBody)
+                        //     .build());
+                        // System.out.println("Fetched S3 object with key: " + messageBody);
+
+                        // Analyze the object for text using Rekognition
+                        DetectTextRequest textRequest = DetectTextRequest.builder()
+                            .image(Image.builder()
+                                .s3Object(software.amazon.awssdk.services.rekognition.model.S3Object.builder()
+                                    .bucket(bucketName)
+                                    .name(messageBody)
+                                    .build())
+                                .build())
+                            .build();
+
+                        DetectTextResponse textResponse = rekognitionClient.detectText(textRequest);
+                        if (!textResponse.textDetections().isEmpty()) {
+                            System.out.println("Text detected in S3 object: " + messageBody);
+                        } else {
+                            System.out.println("No text found in S3 object: " + messageBody);
+                        }
 
                         // After processing the message delete it
                         sqsClient.deleteMessage(DeleteMessageRequest.builder()
