@@ -39,6 +39,9 @@ public class SqsMessagePrinter {
                         return; // Exit the main method, ending the program
                     }
                 }
+
+                // Add a 2-second delay before the next iteration
+                Thread.sleep(2000);
             }
         } catch (Exception e) {
             e.printStackTrace();
