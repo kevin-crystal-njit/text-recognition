@@ -8,10 +8,16 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.rekognition.RekognitionClient;
+import software.amazon.awssdk.services.rekognition.model.DetectTextRequest;
+import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
+import software.amazon.awssdk.services.rekognition.model.Image;
+import software.amazon.awssdk.services.rekognition.model.TextDetection;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 
 public class SqsMessagePrinter {
     public static void main(String[] args) {
-        String queueUrl = "https://sqs.us-east-1.amazonaws.com/280014048542/car-image-indices";
+        String queueUrl = "https://sqs.us-east-1.amazonaws.com/280014048542/car-image-indices.fifo";
         String bucketName = "njit-cs-643";
 
         // Create an SQS client
@@ -25,6 +31,12 @@ public class SqsMessagePrinter {
                 .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
+        
+        // Create a Rekognition client
+        RekognitionClient rekognitionClient = RekognitionClient.builder()
+                .region(Region.US_EAST_1)
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
 
         try {
             // Infinite loop to keep polling for messages
@@ -32,7 +44,7 @@ public class SqsMessagePrinter {
                 ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
                         .queueUrl(queueUrl)
                         .maxNumberOfMessages(1)  // One message at a time
-                        .waitTimeSeconds(10)
+                        .waitTimeSeconds(5)
                         .build();
 
                 ReceiveMessageResponse response = sqsClient.receiveMessage(receiveRequest);
@@ -55,14 +67,18 @@ public class SqsMessagePrinter {
                             .key(messageBody)
                             .build());
                         System.out.println("Fetched S3 object with key: " + messageBody);
+
+                        // After processing the message delete it
+                        sqsClient.deleteMessage(DeleteMessageRequest.builder()
+                                .queueUrl(queueUrl)
+                                .receiptHandle(message.receiptHandle())
+                                .build());
+
                     } catch (Exception e) {
                         System.err.println("Error fetching S3 metadata for key: " + messageBody);
                         e.printStackTrace();
                     }
                 }
-
-                // Add a 2-second delay before the next iteration
-                Thread.sleep(2000);
             }
         } catch (Exception e) {
             e.printStackTrace();
