@@ -18,9 +18,9 @@ import software.amazon.awssdk.services.rekognition.RekognitionClient;
 import software.amazon.awssdk.services.rekognition.model.DetectTextRequest;
 import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
 import software.amazon.awssdk.services.rekognition.model.Image;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.core.sync.RequestBody;
+import java.io.File;
 
 
 
@@ -28,6 +28,8 @@ public class SqsMessagePrinter {
     public static void main(String[] args) {
         String queueUrl = "https://sqs.us-east-1.amazonaws.com/280014048542/car-image-indices.fifo";
         String bucketName = "njit-cs-643";
+        String destinationBucket = "kevins-project-1-output-bucket";
+        String s3FileKey = "detected_texts.txt";
 
         // Create an SQS client
         SqsClient sqsClient = SqsClient.builder()
@@ -94,25 +96,6 @@ public class SqsMessagePrinter {
                                 detectedTexts.append(detection.detectedText()).append(", ");
                             }
                             System.out.println("Detected text: " + detectedTexts.toString());
-
-
-
-
-
-
-                            // Write the final result to a local file
-                            try (BufferedWriter writer = new BufferedWriter(new FileWriter("detected_texts.txt", true))) {
-                                writer.write(messageBody + ": " + detectedTexts.toString());
-                                writer.newLine();
-                            } catch (IOException e) {
-                                System.err.println("Error writing to file"); e.printStackTrace();
-                            }
-
-
-
-
-
-
 
                         }
 
