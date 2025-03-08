@@ -85,17 +85,9 @@ public class SqsMessagePrinter {
                         if (!textResponse.textDetections().isEmpty()) {
 
                             StringBuilder detectedTexts = new StringBuilder();
-
                             for (TextDetection detection : textResponse.textDetections()) {
                                 detectedTexts.append(detection.detectedText()).append(", ");
                             }
-
-                            //String[] entries = detectedTexts.toString().split(", ");
-                            //System.out.println("Total detected text entries: " + entries.length);
-
-
-                            //System.out.println("Detected text length...");
-
                             System.out.println("Detected text: " + detectedTexts.toString());
 
                         }
