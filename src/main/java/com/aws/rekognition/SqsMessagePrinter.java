@@ -84,6 +84,11 @@ public class SqsMessagePrinter {
                         DetectTextResponse textResponse = rekognitionClient.detectText(textRequest);
                         if (!textResponse.textDetections().isEmpty()) {
                             System.out.println("Text detected!!!!!!!!!!!!!!!!!!!");
+
+                            for (TextDetection detection : textResponse.textDetections()) {
+                                System.out.println("Detected text: " + detection.detectedText());
+                            }
+
                         }
 
                         // After processing the message delete it
