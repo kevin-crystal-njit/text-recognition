@@ -35,7 +35,7 @@ public class SqsMessagePrinter {
                 .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
-        
+
         // Create a Rekognition client
         RekognitionClient rekognitionClient = RekognitionClient.builder()
                 .region(Region.US_EAST_1)
@@ -65,20 +65,13 @@ public class SqsMessagePrinter {
                                 .queueUrl(queueUrl)
                                 .receiptHandle(message.receiptHandle())
                                 .build());
-                                
+
                         System.out.println("Received end-of-stream marker. Stopping.");
                         return; // Exit the main method, ending the program
                     }
 
-                    // Use the message body as the S3 key to get the object
+                    // Analyze the object for text using Rekognition
                     try {
-                        // s3Client.getObject(GetObjectRequest.builder()
-                        //     .bucket(bucketName)
-                        //     .key(messageBody)
-                        //     .build());
-                        // System.out.println("Fetched S3 object with key: " + messageBody);
-
-                        // Analyze the object for text using Rekognition
                         DetectTextRequest textRequest = DetectTextRequest.builder()
                             .image(Image.builder()
                                 .s3Object(software.amazon.awssdk.services.rekognition.model.S3Object.builder()
@@ -90,9 +83,7 @@ public class SqsMessagePrinter {
 
                         DetectTextResponse textResponse = rekognitionClient.detectText(textRequest);
                         if (!textResponse.textDetections().isEmpty()) {
-                            System.out.println("Text detected in S3 object: " + messageBody);
-                        } else {
-                            System.out.println("No text found in S3 object: " + messageBody);
+                            System.out.println("Text detected!!!!!!!!!!!!!!!!!!!");
                         }
 
                         // After processing the message delete it
