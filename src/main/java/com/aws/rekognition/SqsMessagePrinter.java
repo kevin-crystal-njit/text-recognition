@@ -18,6 +18,11 @@ import software.amazon.awssdk.services.rekognition.RekognitionClient;
 import software.amazon.awssdk.services.rekognition.model.DetectTextRequest;
 import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
 import software.amazon.awssdk.services.rekognition.model.Image;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+
 
 public class SqsMessagePrinter {
     public static void main(String[] args) {
@@ -89,6 +94,25 @@ public class SqsMessagePrinter {
                                 detectedTexts.append(detection.detectedText()).append(", ");
                             }
                             System.out.println("Detected text: " + detectedTexts.toString());
+
+
+
+
+
+
+                            // Write the final result to a local file
+                            try (BufferedWriter writer = new BufferedWriter(new FileWriter("detected_texts.txt", true))) {
+                                writer.write(messageBody + ": " + detectedTexts.toString());
+                                writer.newLine();
+                            } catch (IOException e) {
+                                System.err.println("Error writing to file"); e.printStackTrace();
+                            }
+
+
+
+
+
+
 
                         }
 
