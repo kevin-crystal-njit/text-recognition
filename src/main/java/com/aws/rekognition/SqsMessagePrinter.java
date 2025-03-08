@@ -83,11 +83,20 @@ public class SqsMessagePrinter {
 
                         DetectTextResponse textResponse = rekognitionClient.detectText(textRequest);
                         if (!textResponse.textDetections().isEmpty()) {
-                            System.out.println("Text detected!!!!!!!!!!!!!!!!!!!");
+
+                            StringBuilder detectedTexts = new StringBuilder();
 
                             for (TextDetection detection : textResponse.textDetections()) {
-                                System.out.println("Detected text: " + detection.detectedText());
+                                detectedTexts.append(detection.detectedText()).append(", ");
                             }
+
+                            //String[] entries = detectedTexts.toString().split(", ");
+                            //System.out.println("Total detected text entries: " + entries.length);
+
+
+                            //System.out.println("Detected text length...");
+
+                            System.out.println("Detected text: " + detectedTexts.toString());
 
                         }
 
