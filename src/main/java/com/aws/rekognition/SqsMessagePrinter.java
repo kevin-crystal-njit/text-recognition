@@ -20,7 +20,7 @@ import software.amazon.awssdk.services.rekognition.model.DetectTextResponse;
 import software.amazon.awssdk.services.rekognition.model.Image;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.core.sync.RequestBody;
-import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 
 
@@ -30,6 +30,7 @@ public class SqsMessagePrinter {
         String bucketName = "njit-cs-643";
         String destinationBucket = "kevins-project-1-output-bucket";
         String s3FileKey = "detected_texts.txt";
+        StringBuilder allDetectedText = new StringBuilder();
 
         SqsClient sqsClient = SqsClient.builder()
                 .region(Region.US_EAST_1)
@@ -70,7 +71,22 @@ public class SqsMessagePrinter {
                                 .receiptHandle(message.receiptHandle())
                                 .build());
 
-                        System.out.println("Received end-of-stream marker. Stopping.");
+                        System.out.println("Received end-of-stream marker. Uploading collected text to S3...");
+
+                        // Upload entire collected text to S3
+                        try {
+                            s3Client.putObject(PutObjectRequest.builder()
+                                    .bucket(destinationBucket)
+                                    .key(s3FileKey)
+                                    .build(),
+                                    RequestBody.fromString(allDetectedText.toString(), StandardCharsets.UTF_8));
+                            System.out.println("Upload successful!");
+                        } catch (Exception e) {
+                            System.err.println("Error uploading file to S3.");
+                            e.printStackTrace();
+                        }
+
+
                         return; // Exit the main method, ending the program
                     }
 
@@ -95,22 +111,8 @@ public class SqsMessagePrinter {
                             System.out.println("Detected text: " + detectedTexts.toString());
 
 
-                            // Upload to S3 file
-                            try {
-                                System.out.println("Uploading detected text directly to S3...");
-
-                                s3Client.putObject(PutObjectRequest.builder()
-                                        .bucket(destinationBucket)
-                                        .key(s3FileKey)
-                                        .build(),
-                                         RequestBody.fromString(detectedTexts.toString()));
-
-                                System.out.println("Upload to S3 successful!");
-                            } catch (Exception e) {
-                                System.err.println("Error uploading text directly to S3.");
-                                e.printStackTrace();
-                            }
-
+                            // Store collected text with index in memory
+                            allDetectedText.append(messageBody).append(": ").append(detectedTexts).append("\n");
                         }
 
                         // After processing the message delete it
