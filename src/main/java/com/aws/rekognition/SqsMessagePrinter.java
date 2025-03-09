@@ -31,19 +31,16 @@ public class SqsMessagePrinter {
         String destinationBucket = "kevins-project-1-output-bucket";
         String s3FileKey = "detected_texts.txt";
 
-        // Create an SQS client
         SqsClient sqsClient = SqsClient.builder()
                 .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
 
-        // Create an S3 client
         S3Client s3Client = S3Client.builder()
                 .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
 
-        // Create a Rekognition client
         RekognitionClient rekognitionClient = RekognitionClient.builder()
                 .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
@@ -96,6 +93,23 @@ public class SqsMessagePrinter {
                                 detectedTexts.append(detection.detectedText()).append(", ");
                             }
                             System.out.println("Detected text: " + detectedTexts.toString());
+
+
+                            // Upload to S3 file
+                            try {
+                                System.out.println("Uploading detected text directly to S3...");
+
+                                s3Client.putObject(PutObjectRequest.builder()
+                                        .bucket(destinationBucket)
+                                        .key(s3FileKey)
+                                        .build(),
+                                         RequestBody.fromString(detectedTexts.toString()));
+
+                                System.out.println("Upload to S3 successful!");
+                            } catch (Exception e) {
+                                System.err.println("Error uploading text directly to S3.");
+                                e.printStackTrace();
+                            }
 
                         }
 
