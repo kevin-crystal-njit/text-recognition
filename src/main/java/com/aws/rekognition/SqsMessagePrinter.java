@@ -130,6 +130,8 @@ public class SqsMessagePrinter {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+	    rekognitionClient.close();
+      	    s3Client.close();
             sqsClient.close();
         }
     }}
